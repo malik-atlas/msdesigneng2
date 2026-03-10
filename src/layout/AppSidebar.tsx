@@ -9,6 +9,7 @@ import {
   GridIcon,
   HorizontaLDots,
   ListIcon,
+  LockIcon,
   PageIcon,
   PieChartIcon,
   PlugInIcon,
@@ -50,6 +51,14 @@ const navItems: NavItem[] = [
     name: "Tables",
     icon: <TableIcon />,
     subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+  },
+  {
+    name: "Administration",
+    icon: <LockIcon />,
+    subItems: [
+      { name: "Utilisateurs", path: "/admin/users", pro: false },
+      { name: "Rôles", path: "/admin/roles", pro: false },
+    ],
   },
   {
     name: "Pages",

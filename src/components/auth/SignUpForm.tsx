@@ -1,13 +1,52 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
+  const [nom, setNom] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [error, setError] = useState("");
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setErrors({});
+    setIsSubmitting(true);
+    try {
+      await register({
+        nom,
+        email,
+        password,
+        password_confirmation: passwordConfirmation,
+      });
+      navigate("/");
+    } catch (err: unknown) {
+      const axiosError = err as {
+        response?: { data?: { message?: string; errors?: Record<string, string[]> } };
+      };
+      if (axiosError.response?.data?.errors) {
+        setErrors(axiosError.response.data.errors);
+      }
+      setError(
+        axiosError.response?.data?.message ||
+          "L'inscription a échoué. Veuillez réessayer."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
@@ -82,33 +121,28 @@ export default function SignUpForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className="space-y-5">
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-                  {/* <!-- First Name --> */}
-                  <div className="sm:col-span-1">
-                    <Label>
-                      First Name<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      type="text"
-                      id="fname"
-                      name="fname"
-                      placeholder="Enter your first name"
-                    />
+                {error && (
+                  <div className="rounded-lg bg-error-50 p-3 text-sm text-error-500 dark:bg-error-500/10">
+                    {error}
                   </div>
-                  {/* <!-- Last Name --> */}
-                  <div className="sm:col-span-1">
-                    <Label>
-                      Last Name<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      type="text"
-                      id="lname"
-                      name="lname"
-                      placeholder="Enter your last name"
-                    />
-                  </div>
+                )}
+                {/* <!-- Nom --> */}
+                <div>
+                  <Label>
+                    Nom<span className="text-error-500">*</span>
+                  </Label>
+                  <Input
+                    type="text"
+                    id="nom"
+                    name="nom"
+                    placeholder="Entrez votre nom"
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
+                    error={!!errors.nom}
+                    hint={errors.nom?.[0]}
+                  />
                 </div>
                 {/* <!-- Email --> */}
                 <div>
@@ -119,18 +153,26 @@ export default function SignUpForm() {
                     type="email"
                     id="email"
                     name="email"
-                    placeholder="Enter your email"
+                    placeholder="Entrez votre email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    error={!!errors.email}
+                    hint={errors.email?.[0]}
                   />
                 </div>
                 {/* <!-- Password --> */}
                 <div>
                   <Label>
-                    Password<span className="text-error-500">*</span>
+                    Mot de passe<span className="text-error-500">*</span>
                   </Label>
                   <div className="relative">
                     <Input
-                      placeholder="Enter your password"
+                      placeholder="Entrez votre mot de passe"
                       type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      error={!!errors.password}
+                      hint={errors.password?.[0]}
                     />
                     <span
                       onClick={() => setShowPassword(!showPassword)}
@@ -144,6 +186,20 @@ export default function SignUpForm() {
                     </span>
                   </div>
                 </div>
+                {/* <!-- Confirm Password --> */}
+                <div>
+                  <Label>
+                    Confirmer le mot de passe<span className="text-error-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      placeholder="Confirmez votre mot de passe"
+                      type={showPassword ? "text" : "password"}
+                      value={passwordConfirmation}
+                      onChange={(e) => setPasswordConfirmation(e.target.value)}
+                    />
+                  </div>
+                </div>
                 {/* <!-- Checkbox --> */}
                 <div className="flex items-center gap-3">
                   <Checkbox
@@ -152,20 +208,24 @@ export default function SignUpForm() {
                     onChange={setIsChecked}
                   />
                   <p className="inline-block font-normal text-gray-500 dark:text-gray-400">
-                    By creating an account means you agree to the{" "}
+                    En créant un compte, vous acceptez les{" "}
                     <span className="text-gray-800 dark:text-white/90">
-                      Terms and Conditions,
+                      Conditions Générales
                     </span>{" "}
-                    and our{" "}
+                    et notre{" "}
                     <span className="text-gray-800 dark:text-white">
-                      Privacy Policy
+                      Politique de Confidentialité
                     </span>
                   </p>
                 </div>
                 {/* <!-- Button --> */}
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Sign Up
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !isChecked}
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? "Inscription..." : "S'inscrire"}
                   </button>
                 </div>
               </div>
