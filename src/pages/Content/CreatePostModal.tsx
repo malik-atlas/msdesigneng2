@@ -7,6 +7,8 @@ import Label from "../../components/form/Label";
 import Button from "../../components/ui/button/Button";
 import { Format } from "./ContentKanban";
 
+import Select from "../../components/form/Select";
+
 interface CreatePostModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -17,6 +19,10 @@ interface CreatePostModalProps {
     loading: boolean;
     formats: Format[];
     mediaFiles?: File[];
+    clients?: { id: number; name: string }[];
+    selectedClient?: string | number;
+    onClientChange?: (val: string) => void;
+    userRole?: string;
 }
 
 export default function CreatePostModal({
@@ -28,13 +34,30 @@ export default function CreatePostModal({
     handleFileChange,
     loading,
     formats,
-    mediaFiles = []
+    mediaFiles = [],
+    clients = [],
+    selectedClient,
+    onClientChange,
+    userRole
 }: CreatePostModalProps) {
+    const isClient = userRole === 'client';
     return (
         <Modal isOpen={isOpen} onClose={onClose} className="max-w-[600px] m-4">
             <div className="w-full bg-white rounded-2xl p-6 dark:bg-gray-900">
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">Criar Novo Post</h3>
                 <form onSubmit={onSubmit} className="space-y-4">
+                    {!isClient && clients && onClientChange && (
+                        <div>
+                            <Label>Cliente</Label>
+                            <Select
+                                options={clients.map(c => ({ value: String(c.id), label: c.name }))}
+                                placeholder="Selecione um cliente"
+                                defaultValue={String(selectedClient || '')}
+                                onChange={onClientChange}
+                                className="w-full"
+                            />
+                        </div>
+                    )}
                     <div>
                         <Label>Assunto</Label>
                         <Input name="subject" value={formData.subject} onChange={handleInputChange} required />

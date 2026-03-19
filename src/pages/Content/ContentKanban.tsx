@@ -113,7 +113,9 @@ export default function ContentKanban() {
     const { isOpen, openModal, closeModal } = useModal();
     // State for create form including optional file
     const [formData, setFormData] = useState({
+        client: "" as number | "",
         subject: "",
+        title: "",
         content: "",
         post_date: "",
         post_time: "",
@@ -631,7 +633,8 @@ export default function ContentKanban() {
         e.preventDefault();
         setLoading(true);
         try {
-            if (!selectedClient) {
+            const clientToUse = formData.client || selectedClient;
+            if (!clientToUse) {
                 alert("Selecione um cliente.");
                 return;
             }
@@ -644,7 +647,7 @@ export default function ContentKanban() {
                     Authorization: API_KEY,
                 },
                 body: JSON.stringify({
-                    client: selectedClient,
+                    client: clientToUse,
                     subject: formData.subject,
                     content: formData.content,
                     post_date: formData.post_date,
@@ -660,7 +663,7 @@ export default function ContentKanban() {
             if (mediaFiles.length > 0) {
                 for (const file of mediaFiles) {
                     const formDataMedia = new FormData();
-                    formDataMedia.append("client", String(selectedClient));
+                    formDataMedia.append("client", String(clientToUse));
                     formDataMedia.append("media", file);
 
                     const mediaResponse = await fetch("/api/v1/media/create/", {
@@ -692,7 +695,7 @@ export default function ContentKanban() {
             await fetchMedias();
             await fetchPostMedias();
             closeModal();
-            setFormData({ subject: "", content: "", post_date: "", post_time: "", status: 2, post_format: "" });
+            setFormData({ client: "", subject: "", title: "", content: "", post_date: "", post_time: "", status: 2, post_format: "" });
             setMediaFiles([]); // Reset file input
 
         } catch (err: any) {
@@ -1072,6 +1075,12 @@ export default function ContentKanban() {
                 loading={loading}
                 formats={formats}
                 mediaFiles={mediaFiles}
+                clients={clients}
+                selectedClient={formData.client || selectedClient || ""}
+                onClientChange={(val) => {
+                    setFormData(prev => ({ ...prev, client: val ? Number(val) : "" }));
+                }}
+                userRole={user?.role}
             />
 
             {/* Edit Modal */}

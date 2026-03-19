@@ -185,6 +185,14 @@ export default function MediaLibrary() {
         if (fileInputRef.current) fileInputRef.current.value = "";
     };
 
+    const getMediaType = (url: string) => {
+        const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+        if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '')) return 'image';
+        if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(ext || '')) return 'video';
+        if (['pdf'].includes(ext || '')) return 'pdf';
+        return 'unknown';
+    };
+
     const clientOptions = clients.map(c => ({ value: String(c.user), label: c.name }));
 
     return (
@@ -236,7 +244,7 @@ export default function MediaLibrary() {
                         <input
                             ref={fileInputRef}
                             type="file"
-                            accept="image/*"
+                            accept="image/*,video/*,application/pdf"
                             multiple
                             className="hidden"
                             onChange={(e) => handleUpload(e.target.files)}
@@ -292,12 +300,31 @@ export default function MediaLibrary() {
                                     className="group relative aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer"
                                     onClick={() => setSelectedMedia(item)}
                                 >
-                                    <img
-                                        src={item.media}
-                                        alt={`Imagem ${item.id}`}
-                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                        loading="lazy"
-                                    />
+                                    {getMediaType(item.media) === 'video' ? (
+                                        <video
+                                            src={item.media}
+                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                            muted
+                                            playsInline
+                                        />
+                                    ) : getMediaType(item.media) === 'pdf' ? (
+                                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800 transition-transform duration-300 group-hover:scale-110">
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                <polyline points="14 2 14 8 20 8"></polyline>
+                                            </svg>
+                                            <span className="text-[10px] px-2 text-center break-all text-gray-500 line-clamp-2">
+                                                {item.media.split('/').pop()?.split('?')[0]}
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <img
+                                            src={item.media}
+                                            alt={`Imagem ${item.id}`}
+                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                            loading="lazy"
+                                        />
+                                    )}
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity p-3 flex flex-col justify-between text-white">
                                         <div className="flex justify-end">
                                             <button
@@ -340,20 +367,49 @@ export default function MediaLibrary() {
                         </svg>
                     </button>
                     {selectedMedia && (
-                        <button
-                            onClick={() => handleDelete(selectedMedia.id)}
-                            className="absolute left-4 top-4 z-50 p-2 bg-red-500/80 hover:bg-red-600 rounded-full text-white transition-colors"
-                            title="Apagar imagem"
-                        >
-                            <TrashBinIcon className="w-6 h-6" />
-                        </button>
+                        <div className="absolute left-4 top-4 z-50 flex gap-2">
+                            <button
+                                onClick={() => handleDelete(selectedMedia.id)}
+                                className="p-2 bg-red-500/80 hover:bg-red-600 rounded-full text-white transition-colors"
+                                title="Apagar mídia"
+                            >
+                                <TrashBinIcon className="w-6 h-6" />
+                            </button>
+                            <a
+                                href={selectedMedia.media}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 bg-blue-500/80 hover:bg-blue-600 rounded-full text-white transition-colors flex items-center justify-center pointer-events-auto"
+                                title="Baixar mídia"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                            </a>
+                        </div>
                     )}
                     {selectedMedia && (
-                        <img
-                            src={selectedMedia.media}
-                            alt="Visualização"
-                            className="max-h-[85vh] max-w-full object-contain rounded-lg"
-                        />
+                        getMediaType(selectedMedia.media) === 'video' ? (
+                            <video
+                                src={selectedMedia.media}
+                                controls
+                                autoPlay
+                                className="max-h-[85vh] max-w-full object-contain rounded-lg"
+                            />
+                        ) : getMediaType(selectedMedia.media) === 'pdf' ? (
+                            <iframe
+                                src={selectedMedia.media}
+                                className="w-[80vw] h-[85vh] max-w-4xl bg-white rounded-lg"
+                                title="PDF Viewer"
+                            />
+                        ) : (
+                            <img
+                                src={selectedMedia.media}
+                                alt="Visualização"
+                                className="max-h-[85vh] max-w-full object-contain rounded-lg"
+                            />
+                        )
                     )}
                 </div>
             </Modal>

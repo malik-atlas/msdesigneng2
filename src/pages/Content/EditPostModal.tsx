@@ -64,7 +64,7 @@ export default function EditPostModal({
         let objectUrl: string | null = null;
 
         if (selectedImage) {
-            const ext = selectedImage.split('.').pop()?.toLowerCase();
+            const ext = selectedImage.split('?')[0].split('.').pop()?.toLowerCase();
             if (ext === 'pdf') {
                 fetch(selectedImage)
                     .then(res => res.blob())
@@ -118,9 +118,9 @@ export default function EditPostModal({
 
     // Helper to determine media type
     const getMediaType = (url: string) => {
-        const ext = url.split('.').pop()?.toLowerCase();
+        const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
         if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '')) return 'image';
-        if (['mp4', 'webm', 'ogg', 'mov'].includes(ext || '')) return 'video';
+        if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(ext || '')) return 'video';
         if (['pdf'].includes(ext || '')) return 'pdf';
         return 'unknown';
     };
@@ -508,14 +508,32 @@ export default function EditPostModal({
                     className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/90 p-4"
                     onClick={() => setSelectedImage(null)}
                 >
-                    <button
-                        className="absolute top-4 right-4 text-white hover:text-gray-300"
-                        onClick={() => setSelectedImage(null)}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <div className="absolute top-4 right-4 flex gap-4">
+                        <a
+                            href={selectedImage}
+                            download
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-white hover:text-gray-300 pointer-events-auto"
+                            title="Baixar mídia"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                        </a>
+                        <button
+                            className="text-white hover:text-gray-300 pointer-events-auto"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedImage(null);
+                            }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
                     {getMediaType(selectedImage) === 'video' ? (
                         <video
