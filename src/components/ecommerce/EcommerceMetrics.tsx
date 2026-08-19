@@ -47,8 +47,8 @@ export default function EcommerceMetrics() {
             </h4>
           </div>
 
-          <Badge color="error">
-            <ArrowDownIcon />
+          <Badge color="success">
+            <ArrowUpIcon />
             9.05%
           </Badge>
         </div>
