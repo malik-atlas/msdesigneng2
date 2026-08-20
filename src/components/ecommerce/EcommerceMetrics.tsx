@@ -1,6 +1,5 @@
 import {
   ArrowUpIcon,
-  ArrowUpIcon,
   BoxIconLine,
   GroupIcon,
 } from "../../icons";
